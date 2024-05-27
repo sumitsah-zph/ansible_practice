@@ -1,0 +1,49 @@
+---
+- name: Check that the apache-tomcat-{{ tomcat_version }}.tar.gz exists
+  stat:
+    path: /tmp/apache-tomcat-{{ tomcat_version }}.tar.gz
+  register: tomcat_tar_exists
+  
+- name: Download Apache Tomcat with check (sha512)
+  ansible.builtin.get_url:
+    url: "{{ tomcat_download_url }}"
+    dest: /tmp
+    checksum: sha512:{{ tomcat_download_sha512 }}
+  when: ( not tomcat_tar_exists.stat.exists )
+
+- name: create /zph/apache-tomcat-{{ tomcat_version }} directory for unarchiving
+  file:
+    path: /zph/apache-tomcat-{{ tomcat_version }}
+    state: directory
+    owner: tomcat
+    group: tomcat
+
+- name: Unarchiving Apache Tomcat
+  unarchive:
+    src: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
+    dest: "/zph/apache-tomcat-{{ tomcat_version }}"
+    remote_src: yes
+    extra_opts: "--strip-components=1"
+    owner: tomcat
+    group: tomcat
+
+- name: Copy tomcat systemd File
+  template: 
+    src: tomcat.service
+    dest: "/etc/systemd/system/"
+
+# - name: webapps backup
+#   ansible.builtin.shell:
+#     cmd: mv /zph/apache-tomcat-{{ tomcat_version }}/webapps/ /zph/apache-tomcat-{{ tomcat_version }}/webapps-backup
+
+# - name: create /zph/apache-tomcat-{{ tomcat_version }}/webapps directory 
+#   file:
+#     path: /zph/apache-tomcat-{{ tomcat_version }}/webapps
+#     state: directory
+
+- name: Start Tomcat
+  ansible.builtin.systemd:
+    state: restarted
+    enabled: true
+    daemon_reload: true
+    name: tomcat

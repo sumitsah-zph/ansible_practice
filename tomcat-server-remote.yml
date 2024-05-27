@@ -1,0 +1,54 @@
+---
+- name: Install JAVA and config Tomcat Server
+  hosts: remote_server
+  become: yes
+  vars_files:
+    - vars/variable.yml
+  vars:
+    add_user: true
+    install_java: true
+    install_tomcat: true
+
+  tasks:
+    - include_tasks: ./tasks/user.yml
+      when: add_user
+
+    - include_tasks: ./tasks/java.yml
+      when: install_java
+
+    - include_tasks: ./tasks/tomcat.yml
+      when: install_tomcat
+
+    - include_tasks: ./tasks/maven.yml
+
+    - name: Build and Deploy
+      block: 
+        - name: Git checkout
+          ansible.builtin.git:
+            repo: 'https://github.com/cyborgdeveloper/maven-web.git'
+            dest: /zph/maven-web
+            version: master
+
+        - name: Build Java App
+          ansible.builtin.shell:
+            cmd: mvn clean install
+            chdir: /zph/maven-web
+          environment:
+            JAVA_HOME: "/usr/java/jdk-{{ java_version }}"
+            PATH: "/opt/maven-{{ maven_version }}/bin:{{ ansible_env.PATH }}"
+
+        - name: Copy WAR file
+          ansible.builtin.shell:
+            cmd: cp /zph/maven-web/target/*.war /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
+
+        - name: Change file ownership, group and permissions
+          ansible.builtin.file:
+            path: /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
+            owner: tomcat
+            group: tomcat
+            mode: '0740'
+
+        - name: Restart Tomcat
+          ansible.builtin.systemd:
+            state: restarted
+            name: tomcat

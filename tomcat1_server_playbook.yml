@@ -1,0 +1,93 @@
+---
+- name: Install Tomcat server on Ubuntu
+  hosts: localhost
+  become: yes
+  vars:
+    tomcat_download_url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.89/bin/apache-tomcat-9.0.89.zip 
+
+  tasks:
+    - name: Create a tomcat group
+      user:
+        name: tomcat1
+        system: yes
+        state: present
+
+    - name: Create a new user
+      user:
+        name: tomcat1
+        group: tomcat1
+        state: present
+        shell: /usr/sbin/nologin
+
+    - name: Create a directory
+      file:
+        path: /opt/tomcat1
+        state: directory
+        owner: tomcat1
+        group: tomcat1
+        mode: 0755
+
+    - name: Download Tomcat using unarchive
+      become: yes
+      unarchive:
+        src: "{{tomcat_download_url}}"
+        dest: /opt/tomcat1
+        mode: 0755
+        remote_src: yes
+        group: tomcat1
+        owner: tomcat1
+    
+    - name: Move files to the /opt/tomcat1 directory
+      become: yes
+      # become_user: tomcat
+      shell: " mv /opt/tomcat1/apache*/* /opt/tomcat1"
+
+    # - name: Check if files exist in /opt/tomcat1/apache*/
+    #   stat:
+    #     path: /opt/tomcat1/apache*/
+    #   register: apache_files
+
+    # - name: Move files to the /opt/tomcat directory
+    #   shell: "mv /opt/tomcat1/apache*/* /opt/tomcat1"
+    #   when: apache_files.stat.exists
+
+
+
+
+    - name: Creating a service file
+      become: yes
+      copy: 
+        content: |-
+          [Unit]
+          Description=Tomcat Service
+          Requires=network.target
+          After=network.target
+          [Service]
+          Type=forking
+          User=tomcat1
+          Group=tomcat1
+          Environment="CATALINA_PID=/opt/tomcat1/logs/tomcat.pid"
+          Environment="CATALINA_BASE=/opt/tomcat1"
+          Environment="CATALINA_HOME=/opt/tomcat1"
+          Environment="CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC"
+          ExecStart=/opt/tomcat1/bin/startup.sh
+          ExecStop=/opt/tomcat1/bin/shutdown.sh
+          RestartSec=10
+          Restart=always
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/tomcat1.service
+
+    - name: Reload the SystemD to re-read configurations
+      become: yes
+      systemd:
+        daemon-reload: yes
+
+    - name: Enable the tomcat service and start
+      become: yes
+      systemd:
+        name: tomcat1
+        enabled: yes
+        state: started
+
+      

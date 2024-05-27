@@ -1,0 +1,30 @@
+---
+- name: Check that the jdk-{{ java_version }}_linux-x64_bin.tar.gz exists
+  stat:
+    path: /tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz
+  register: java_tar_exist
+  
+- name: Download file with check (sha256)
+  ansible.builtin.get_url:
+    url: "{{ java_download_url }}"
+    dest: /tmp
+    checksum: sha256:{{ java_download_sha256 }}
+  when: ( not java_tar_exist.stat.exists )
+
+- name: create /usr/java/jdk-{{ java_version }} directory for unarchiving
+  file:
+    path: /usr/java/jdk-{{ java_version }}
+    state: directory
+
+- name: Add JAVA_HOME in Environment
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: '^JAVA_HOME='
+    line: JAVA_HOME="/usr/java/jdk-{{ java_version }}"
+
+- name: Unarchiving Java
+  unarchive:
+    src: "/tmp/jdk-{{ java_version }}_linux-x64_bin.tar.gz"
+    dest: "/usr/java/jdk-{{ java_version }}"
+    remote_src: yes
+    extra_opts: "--strip-components=1"

@@ -1,0 +1,13 @@
+---
+- name: Create a new user tomcat
+  ansible.builtin.user:
+    name: tomcat
+    shell: /bin/false
+
+- name: create zph dir
+  ansible.builtin.file:
+    path: /zph
+    state: directory
+    owner: tomcat
+    group: tomcat
+    mode: '0755'

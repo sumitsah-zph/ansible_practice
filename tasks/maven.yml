@@ -1,0 +1,23 @@
+- name: Check that the apache-maven-{{ maven_version }}-bin.tar.gz exists
+  stat:
+    path: /tmp/apache-maven-{{ maven_version }}-bin.tar.gz
+  register: maven_tar_exist
+  
+- name: Download file with check (sha512)
+  ansible.builtin.get_url:
+    url: "{{ maven_download_url }}"
+    dest: /tmp
+    checksum: sha512:{{ maven_download_sha512 }}
+  when: ( not maven_tar_exist.stat.exists )
+
+- name: create /opt/maven-{{ maven_version }} directory for unarchiving
+  file:
+    path: /opt/maven-{{ maven_version }}
+    state: directory
+
+- name: Unarchiving apache maven
+  unarchive:
+    src: /tmp/apache-maven-{{ maven_version }}-bin.tar.gz
+    dest: "/opt/maven-{{ maven_version }}"
+    remote_src: yes
+    extra_opts: "--strip-components=1"
