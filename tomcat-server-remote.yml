@@ -21,34 +21,52 @@
 
     - include_tasks: ./tasks/maven.yml
 
-    - name: Build and Deploy
-      block: 
-        - name: Git checkout
-          ansible.builtin.git:
-            repo: 'https://github.com/cyborgdeveloper/maven-web.git'
-            dest: /zph/maven-web
-            version: master
+    - name: copy war onto tomcat
+      copy:
+        src: /home/azureuser/ansible_practice/maven-web.war
+        dest: /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
 
-        - name: Build Java App
-          ansible.builtin.shell:
-            cmd: mvn clean install
-            chdir: /zph/maven-web
-          environment:
-            JAVA_HOME: "/usr/java/jdk-{{ java_version }}"
-            PATH: "/opt/maven-{{ maven_version }}/bin:{{ ansible_env.PATH }}"
 
-        - name: Copy WAR file
-          ansible.builtin.shell:
-            cmd: cp /zph/maven-web/target/*.war /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
+    - name: Change file ownership, group and permissions
+      ansible.builtin.file:
+        path: /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
+        owner: tomcat
+        group: tomcat
+        mode: '0740'
 
-        - name: Change file ownership, group and permissions
-          ansible.builtin.file:
-            path: /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
-            owner: tomcat
-            group: tomcat
-            mode: '0740'
+    - name: Restart Tomcat
+      ansible.builtin.systemd:
+        state: restarted
+        name: tomcat
 
-        - name: Restart Tomcat
-          ansible.builtin.systemd:
-            state: restarted
-            name: tomcat
+    # - name: Build and Deploy
+    #   block: 
+    #     - name: Git checkout
+    #       ansible.builtin.git:
+    #         repo: 'https://github.com/cyborgdeveloper/maven-web.git'
+    #         dest: /zph/maven-web
+    #         version: master
+
+    #     - name: Build Java App
+    #       ansible.builtin.shell:
+    #         cmd: mvn clean install
+    #         chdir: /zph/maven-web
+    #       environment:
+    #         JAVA_HOME: "/usr/java/jdk-{{ java_version }}"
+    #         PATH: "/opt/maven-{{ maven_version }}/bin:{{ ansible_env.PATH }}"
+
+    #     - name: Copy WAR file
+    #       ansible.builtin.shell:
+    #         cmd: cp /zph/maven-web/target/*.war /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
+
+    #     - name: Change file ownership, group and permissions
+    #       ansible.builtin.file:
+    #         path: /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
+    #         owner: tomcat
+    #         group: tomcat
+    #         mode: '0740'
+
+    #     - name: Restart Tomcat
+    #       ansible.builtin.systemd:
+    #         state: restarted
+    #         name: tomcat
