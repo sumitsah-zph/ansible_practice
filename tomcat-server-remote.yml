@@ -23,7 +23,7 @@
 
     - name: copy war onto tomcat
       copy:
-        src: /home/azureuser/ansible_practice/maven-web.war
+        src: /home/azureuser/ansible_practice/target/maven-web.war
         dest: /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
 
 
