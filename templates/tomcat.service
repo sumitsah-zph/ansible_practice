@@ -9,15 +9,15 @@ User=tomcat
 Group=tomcat
 
 Environment="JAVA_HOME=/usr/java/jdk-{{ java_version }}"
-Environment="CATALINA_BASE=/zph/apache-tomcat-{{ tomcat_version }}"
-Environment="CATALINA_HOME=/zph/apache-tomcat-{{ tomcat_version }}"
+Environment="CATALINA_BASE=/zph1/apache-tomcat-{{ tomcat_version }}"
+Environment="CATALINA_HOME=/zph1/apache-tomcat-{{ tomcat_version }}"
 
 #Environment="JAVA_OPTS=-Djava.security.egd=file:///dev/urandom"
 #Environment="CATALINA_PID=/zph/apache-tomcat-{{ tomcat_version }}/temp/tomcat.pid"
 #Environment='CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC'
 
-ExecStart=/zph/apache-tomcat-{{ tomcat_version }}/bin/startup.sh
-ExecStop=/zph/apache-tomcat-{{ tomcat_version }}/bin/shutdown.sh
+ExecStart=/zph1/apache-tomcat-{{ tomcat_version }}/bin/startup.sh
+ExecStop=/zph1/apache-tomcat-{{ tomcat_version }}/bin/shutdown.sh
 
 #RestartSec=10
 #Restart=always

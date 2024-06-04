@@ -6,7 +6,7 @@
 
 - name: create zph dir
   ansible.builtin.file:
-    path: /zph
+    path: /zph1
     state: directory
     owner: tomcat
     group: tomcat

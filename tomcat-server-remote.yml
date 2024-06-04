@@ -1,6 +1,6 @@
 ---
 - name: Install JAVA and config Tomcat Server
-  hosts: remote_server
+  hosts: localhost
   become: yes
   vars_files:
     - vars/variable.yml
@@ -23,13 +23,13 @@
 
     - name: copy war onto tomcat
       copy:
-        src: /home/azureuser/ansible_practice/target/maven-web.war
-        dest: /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
+        src: /home/sumit.sah/playground/ansible/tomcat/target/maven-web.war
+        dest: /zph1/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
 
 
     - name: Change file ownership, group and permissions
       ansible.builtin.file:
-        path: /zph/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
+        path: /zph1/apache-tomcat-{{ tomcat_version }}/webapps/ROOT.war
         owner: tomcat
         group: tomcat
         mode: '0740'
